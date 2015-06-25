@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="http://d3js.org/d3.v2.min.js?2.9.3"></script>
+<style>
+
+    .link {
+        stroke: #aaa;
+    }
+
+    .link:hover {
+        fill: blue ;
+    }
+    .node text {
+        stroke:#333;
+        cursos:pointer;
+    }
+
+    .node circle{
+        stroke:#fff;
+        stroke-width:3px;
+        fill:#555;
+    }
+
+</style>
+<body>
+<script>
+
+    // Canvas
+    var width = 1980, height = 1000
+
+    // Appends the data/canvas in the body
+    var svg = d3.select("body").append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+
+    var force = d3.layout.force()
+            .gravity(.05) //spring connecting each node
+            .distance(100) // from other nodes
+            .charge(-100) // keeps nodes centered
+            .size([width, height]);
+
+    // reads in file and assigns data into variables
+    d3.json("friday810.json", function(json) {
+        force
+                .nodes(json.nodes)
+                .links(json.links)
+                .start();
+
+        // Gets all the links
+        var link = svg.selectAll(".link")
+                .data(json.links)
+                .enter()
+                .append("line")// draws lines from/to each link
+                .attr("class", "link")
+                .style("stroke-width", function(d) {
+                    return Math.sqrt(d.weight); //?
+                });
+
+        // Gets all the nodes
+        var node = svg.selectAll(".node")
+                .data(json.nodes)
+                .enter()
+                .append("g")
+                .attr("class", "node")
+                .call(force.drag);
+
+        // Stores each node into a circle
+        node.append("circle")
+                .attr("r","5"); // radius = 5
+
+        // Writes the text of each node
+        node.append("text")
+                .attr("dx", 12)
+                .attr("dy", ".35em")
+                .text(function(d) {
+                    console.log(d);
+                    return d.id;  // gets name from data/file
+                });
+
+        force.on("tick", function() {
+            link.attr("x1", function(d) { return d.source.x; })
+                    .attr("y1", function(d) { return d.source.y; })
+                    .attr("x2", function(d) { return d.target.x; })
+                    .attr("y2", function(d) { return d.target.y; });
+
+            node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+        });
+    });
+
+</script>
